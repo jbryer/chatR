@@ -1,0 +1,48 @@
+---
+output: github_document
+editor_options: 
+  chunk_output_type: console
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# chatR
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+This repository is a Retrieval-Augmented Generation (RAG) chat bot written in R Shiny.
+
+### Installation
+
+Download and install Ollama for your operation system: https://ollama.com
+
+We can call `ping_ollama()` to confirm that it is running and available.
+
+```{r, eval=TRUE}
+rollama::ping_ollama() # Make sure Ollam is running
+```
+
+You can get a list of available models at https://ollama.com/library. 
+
+```{r, eval=TRUE}
+model <- 'llama3.1'
+rollama::pull_model(model = model)
+```
+
+### Development
+
+```{r, eval=FALSE}
+usethis::use_tidy_description()
+devtools::document()
+devtools::install()
+devtools::check(cran = TRUE)
+```
+

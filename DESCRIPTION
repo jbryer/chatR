@@ -1,0 +1,30 @@
+Type: Package
+Package: chatR
+Title: Shiny Application for Retrieval-Augmented Generation Chatbot
+Version: 0.1.0
+Date: 2025-11-25
+Authors@R:
+    person("Jason", "Bryer", , "jason@bryer.org", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-2454-0402"))
+Maintainer: Jason Bryer <jason@bryer.org>
+Description: R package and Shiny application to assist with creating
+    custom chatbots using retrieval-augmented aeneration
+License: GPL (>= 3)
+URL: https://jbryer.github.io/chatR/
+BugReports: https://github.com/jbryer/chatR/issues
+Depends:
+    R (>= 3.5)
+Imports:
+    dplyr,
+    reshape2,
+    rock,
+    shiny
+Suggests:
+    knitr,
+    rmarkdown
+VignetteBuilder:
+    knitr
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
