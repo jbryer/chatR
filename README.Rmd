@@ -16,9 +16,16 @@ knitr::opts_chunk$set(
 # chatR
 
 <!-- badges: start -->
+`r badger::badge_cran_release("chatR", "orange")` `r badger::badge_devel("jbryer/chatR", "blue")` `r badger::badge_repostatus("Active")` 
 <!-- badges: end -->
 
 This repository is a Retrieval-Augmented Generation (RAG) chat bot written in R Shiny.
+
+
+I gave a talk at the 2025 [CUNY IT Conference](https://events.govtech.com/CUNY-IT-Conference.html#agenda) titled *Creating a Custom AI Bot for Your Class*.
+
+**Abstract**: AI chatbots have become a popular resource for students in learning. However, the accuracy of answers given by AI is often questionable. Retrieval-augmented generation (RAG) models are a way of augmenting large language models with a curated set of resources. When students interact with the chatbot, answers can (optionally) be restricted to resources in the knowledge base along with direct references and/or links. This talk will introduce a framework for creating custom chatbots. Resources on how you can monitor the questions and answers students ask will also be discussed.
+
 
 ### Installation
 

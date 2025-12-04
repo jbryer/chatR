@@ -16,8 +16,11 @@ Depends:
     R (>= 3.5)
 Imports:
     dplyr,
+    ellmer,
+    ranger,
     reshape2,
     rock,
+    rollama,
     shiny
 Suggests:
     knitr,
@@ -28,3 +31,5 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+Enhances: 
+    piggyback
