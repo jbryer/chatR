@@ -6,4 +6,6 @@
 .quarto
 .RData
 data/*.duckdb
-data-raw/
+data-raw/*.duckdb
+private/
+inst/shiny/history/

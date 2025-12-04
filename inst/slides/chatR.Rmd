@@ -1,0 +1,360 @@
+---
+title: "Creating a Custom AI Bot for Your Class"
+subtitle: "CUNY IT Conference"
+author: Jason Bryer, Ph.D.
+date: "December 5, 2025"
+output:
+  xaringan::moon_reader:
+    css: ["assets/mtheme_max.css", "assets/fonts_mtheme_max.css"]
+    lib_dir: libs
+    seal: false
+    nature:
+      highlightStyle: solarized-light
+      highlightLanguage: R
+      highlightLines: true
+      countIncrementalSlides: false
+      ratio: "16:9"
+      navigation:
+        scroll: false
+    includes:
+      in_header: [assets/header.html]
+      # after_body: [assets/insert-logo.html]
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include = FALSE}
+library(knitr)
+library(rmarkdown)
+library(ellmer)
+
+knitr::opts_chunk$set(
+	message = FALSE,
+	warning = FALSE,
+	error = FALSE
+)
+```
+
+class: center, middle, inverse, title-slide
+
+# `r metadata$title`
+## `r metadata$subtitle`
+### `r metadata$author`
+### `r metadata$date`
+
+
+---
+# Introduction
+
+My motivating question for this project is: **How are students using chatbots for learning?**
+
+To answer this question I created a custom chatbot so...
+
+* Student questions and answers are saved.
+
+* The LLM prioritizes getting from a curated list of resources.
+
+* Data is not sent to any third party (i.e. using local models).
+
+---
+# What is AI?
+
+First, AI is a marketing term. I prefer to be more specific regarding what we are doing:
+
+.pull-left[
+**Machine Learning (ML)**
+
+This involves training models (e.g. regression, etc.) to predict outcomes. We have been doing this for over a century.
+]
+.pull-right[
+**Large Language Models (LLM)**
+
+This is often what people mean when they say AI. This includes products like ChatGPT, Antrhopic, and Google Gemini. LLMs generate text, images, videos, etc. from a prompt.
+]
+
+
+---
+# Outline
+
+1. Document preprocessing - convert our resources (websites, PDFs) to markdown so the LLM can process the text.
+
+2. Text chunking - divide the text into smaller chunks.
+
+3. Embeddings - convert the text into embeddings. These are numeric representations of the text.
+
+4. Storage - Insert the embeddings into a database. We will use [DuckDB](https://duckdb.org) which is a high performance database format designed for data analysis.
+
+5. Connect/Retrieve - connect the knowledge store to our LLM to assist in answer queries.
+
+
+
+---
+class: font90
+# Application Overview
+
+This application is built using [R](https://cran.r-project.org), however minimal knowledge of R is required to setup your application. You can install [R here](https://cran.r-project.org) and [RStudio here](https://posit.co/products/open-source/rstudio/?sid=1). I have more detailed instructions on [my course website](https://fall2025.data606.net/course/software.html)
+
+
+* [R](https://cran.r-project.org) - Main programming language.
+
+* [Shiny](https://shiny.posit.co) - Framework for creating a web application in R.
+
+* [ellmer](https://ellmer.tidyverse.org) - This package provides functions to interact with many LLM providers, including Ollama.
+
+* [ragnar](https://ragnar.tidyverse.org) - This package assists with the creation of a RAG database.
+
+* [rollama](https://github.com/JBGruber/rollama) - This package is designed to work specifically with Ollama.
+
+* [login](https://github.com/jbryer/login) - R package that adds user authentication to Shiny applications. Recording of a talk I gave on this package at ShinyConf 2024 is available here: https://bryer.org/posts/2024-04-17-ShinyConf2024.html
+
+---
+# Local Setup
+
+You first need to install [R](https://cran.r-project.org). I also recommend you install [RStudio](https://posit.co/products/open-source/rstudio/?sid=1). The following command will install the `chatR` package and all dependencies.
+
+```{r, eval=FALSE}
+install.packages('pak')
+pak::pkg_install('jbryer/chatR')
+```
+
+---
+# Ollama
+
+.pull-left[
+We are going to use Ollama as our LLM engine. We can run this model locally which means student questions are not sent to any thrid party sites.
+
+Download from https://ollama.com
+
+List of available models: https://ollama.com/library
+
+]
+.pull-right[
+```{r, echo=FALSE}
+knitr::include_graphics('images/ollama_screenshot.png')
+```
+]
+
+
+---
+# Verifying R can talk to Ollama
+
+First, let's verify that the local Ollama service is running.
+
+```{r}
+rollama::ping_ollama() # Make sure Ollam is running
+```
+
+```{r}
+model <- 'llama3.1'
+```
+
+```{r, eval=FALSE}
+rollama::pull_model(model = model)
+model_info <- rollama::show_model(model = model)
+```
+
+---
+# Connecting to the LLM
+
+The `ellmer` package has a number of functions for connecting to *all* the popular LLMs.
+
+```{r, eval=TRUE}
+chat <- ellmer::chat_ollama(
+	model = model,
+	echo = 'all'
+)
+```
+
+Once we have a `chat` object we can begin sending queries.
+
+```{r}
+repsonse <- chat$chat('What is the central limit theorem? Keep your answers to less than three sentences.',
+					  echo = 'none')
+repsonse
+```
+
+---
+# Lots of LLMs
+
+This is the current list of available LLMs within the `ellmer` package.
+
+```{r}
+ls('package:ellmer')[grep('^chat_', ls('package:ellmer'))]
+```
+
+---
+# Retrival Augemented Generated Models
+
+"Retrieval-augmented generation (RAG) is a technique that enables large language models (LLMs) to retrieve and incorporate new information" ([Wikipedia](https://en.wikipedia.org/wiki/Retrieval-augmented_generation)).
+
+RAG is a way of restricting chatbots to a curated set of resources.
+
+You can optionally allow the chatbot to go beyond the resources if it cannot find an answer in them.
+
+---
+# Document preprocessing and chunking
+
+We need to first convert our resources into a format the LLM can understand.
+
+```{r, eval=FALSE}
+website_urls <- c('https://r4ds.hadley.nz') # Only using one site for illustrative purposes
+pages <- sapply(website_urls, ragnar::ragnar_find_links)
+pages <- unlist(pages) |> unname()
+```
+
+For all the pages found, convert to markdown and then chunk the text.
+
+```{r, eval=FALSE}
+page_chunks <- list()
+for(i in 1:length(pages)) {
+	page_chunks[[i]] <- pages[i] |> read_as_markdown() |> markdown_chunk()
+}
+```
+
+---
+# Create embeddings and storage
+
+Create the knowledge store (DuckDB database)
+
+```{r, eval=FALSE}
+store <- ragnar_store_create(
+	'data/ranger_ollama.duckdb,
+	embed = \(x) ragnar::embed_ollama(x, model = 'llama3.1')
+)
+```
+
+Now we can insert our text embeddings into the database.
+
+```{r, eval=FALSE}
+for(i in 1:length(page_chunks)) {
+	ragnar_store_insert(store, page_chunks[[i]])
+}
+```
+
+Finnaly, build an index for our knowledge store.
+
+```{r, eval=FALSE}
+ragnar_store_build_index(store)
+```
+
+---
+# Connecting to a built knowledge store
+
+```{r}
+store <- ragnar_store_connect(
+	store_location,
+	read_only = FALSE
+)
+```
+
+---
+# Inspecting the knowledge store
+
+**WARNING:** Creating the knowledge store will take a long time. I include 14 sources (3 PDFs, 11 websites) and it took over 12 hours on a M1 MacBook Pro to generate the knowledge store. You can download my knowledge store from the [Github repo](https://github.com/jbryer/chatR/releases).
+
+--
+
+We can retrieve content from the store.
+
+```{r, eval=TRUE, cache=TRUE}
+ragnar_retrieve(store, 'bar plots in ggplot2')
+```
+
+The `ragnar` package includes a Shiny application to explore the knowledge store interactively.
+
+```{r, eval=FALSE}
+ragnar::ragnar_store_inspect(store)
+```
+
+
+
+---
+# System Prompt
+
+One of the ways we can improve LLMs for our classes is by specifying a system prompt. This is global direction applied to all queries. Here is the system prompt I am currently using for my R and Statistics chatbot:
+
+```
+ You are an expert in R and statistics. You are concise.
+  Always perform a search of the knowledge store for each user request.
+  If the initial search does not return relevant documents, you may perform
+  an additional search. Each search will return unique, new excerpts.
+  If no relevant results are found, inform the user and do not attempt to answer the question.
+  If the user request is ambiguous, perform at least one search first, then ask a clarifying question.
+  Every response must cite links to official documentation sources.
+```
+
+```{r, echo=FALSE}
+system_prompt <- "
+  You are an expert in R and statistics. You are concise.
+  Always perform a search of the knowledge store for each user request.
+  If the initial search does not return relevant documents, you may perform
+  an additional search. Each search will return unique, new excerpts.
+  If no relevant results are found, inform the user and do not attempt to answer the question.
+  If the user request is ambiguous, perform at least one search first, then ask a clarifying question.
+  Every response must cite links to official documentation sources.
+  "
+```
+
+---
+# Connecting the knowledge store to the LLM
+
+Using the `ragnar_register_tool_retrieve` we can connect our knowledge store with any `ellmer` chat object.
+
+```{r, eval=TRUE, cache=TRUE}
+ragnar_register_tool_retrieve(chat, store)
+```
+
+```{r, eval=TRUE}
+chat <- ellmer::chat_ollama(
+	model = model, echo = 'all',
+	system_prompt = system_prompt)
+```
+
+
+```{r, eval=TRUE, cache=TRUE}
+chat$chat('How do I subset columns from a data frame?')
+```
+
+---
+class: center, inverse, middle, hide-logo, font140
+
+# DEMO
+
+---
+# Next Steps?
+
+Just finished my first semester using this custom chatbot. Over the break I will begin analyzing in more detail the questions students ask.
+
+I want to also evaluate the accuracy of the answers students received from their questions.
+
+For the Spring semester I intend to solicit more explecit feedback from students on the quality of the chatbot.
+
+I am also interested in how this may related to students responses to one-minute-papers they complete after each class. Students repsond to the following two questions:
+1. What was the most important thing you learned during this class?
+2. What important question remains unanswered for you?
+
+---
+class: center, inverse, middle, hide-logo, font140
+
+# Questions?
+
+---
+class: center, inverse, middle, hide-logo, font140
+
+.pull-left[
+
+# Thank You!
+
+.font80[
+[`r icons::fontawesome("paper-plane")` jason.bryer@cuny.edu](mailto:jason.bryer@cuny.edu)  
+[`r icons::fontawesome("github")` @jbryer](https://github.com/jbryer)  
+[`r icons::fontawesome('mastodon')` @jbryer@vis.social](https://vis.social/@jbryer)  
+[`r icons::fontawesome("link")` www.bryer.org](https://bryer.org)   
+]
+
+]
+.pull-right[
+```{r, echo=FALSE, fig.width=5, fig.height=5}
+qrcode::qr_code('https://github.com/jbryer/chatR') |> plot(col = c('#005DAC', 'white'))
+```
+]

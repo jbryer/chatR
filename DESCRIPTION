@@ -17,19 +17,22 @@ Depends:
 Imports:
     dplyr,
     ellmer,
+    login,
+    ragnar,
     ranger,
     reshape2,
-    rock,
-    rollama,
-    shiny
+    shiny,
+    shinyBS,
+    shinychat,
+    shinyjs
 Suggests:
     knitr,
     rmarkdown
+Enhances: 
+    piggyback
 VignetteBuilder:
     knitr
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
-Enhances: 
-    piggyback
+RoxygenNote: 7.3.3

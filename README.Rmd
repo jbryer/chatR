@@ -13,10 +13,10 @@ knitr::opts_chunk$set(
 )
 ```
 
-# chatR
+# chatR: Shiny Application for Retrival Augemented Generation Chatbot 
 
 <!-- badges: start -->
-`r badger::badge_cran_release("chatR", "orange")` `r badger::badge_devel("jbryer/chatR", "blue")` `r badger::badge_repostatus("Active")` 
+`r badger::badge_devel("jbryer/chatR", "blue")` `r badger::badge_repostatus("Active")` 
 <!-- badges: end -->
 
 This repository is a Retrieval-Augmented Generation (RAG) chat bot written in R Shiny.
@@ -26,8 +26,16 @@ I gave a talk at the 2025 [CUNY IT Conference](https://events.govtech.com/CUNY-I
 
 **Abstract**: AI chatbots have become a popular resource for students in learning. However, the accuracy of answers given by AI is often questionable. Retrieval-augmented generation (RAG) models are a way of augmenting large language models with a curated set of resources. When students interact with the chatbot, answers can (optionally) be restricted to resources in the knowledge base along with direct references and/or links. This talk will introduce a framework for creating custom chatbots. Resources on how you can monitor the questions and answers students ask will also be discussed.
 
+[Click here for slides](inst/slides/chatR.pdf)
 
 ### Installation
+
+You first need to install [R](https://cran.r-project.org). I also recommend you install [RStudio](https://posit.co/products/open-source/rstudio/?sid=1). The following command will install the `chatR` package and all dependencies.
+
+```{r, eval=FALSE}
+install.packages('pak')
+pak::pkg_install('jbryer/chatR')
+```
 
 Download and install Ollama for your operation system: https://ollama.com
 
@@ -44,6 +52,25 @@ model <- 'llama3.1'
 rollama::pull_model(model = model)
 ```
 
+You can download a prebuilt knowledge store of common R and statistics resources (note this file is over 1gb in size).
+
+```{r, eval=FALSE}
+if(!dir.exists('data-raw/')) { dir.create('data-raw/', recursive = TRUE) }
+piggyback::pb_download(
+	file = "ranger_ollama.duckdb", 
+	dest = 'data-raw/',
+	repo = "jbryer/chatR",
+	tag = "v1.0.0")
+```
+
+We can run the application locally without needing to login.
+
+```{r, eval=FALSE}
+chatR::run_chatR(
+	store_location = 'data-raw/ranger_ollama.duckdb'
+)
+```
+
 ### Development
 
 ```{r, eval=FALSE}
@@ -51,5 +78,15 @@ usethis::use_tidy_description()
 devtools::document()
 devtools::install()
 devtools::check(cran = TRUE)
+# Build PDF of the slide deck
+pagedown::chrome_print('inst/slides/chatR.html', timeout = 120)
 ```
 
+Uploading the knowledge store (DuckDB file) to Github
+
+```{r, eval=FALSE}
+library(piggyback)
+tag <- 'v1.0.0'
+pb_release_create(repo = "jbryer/chatR", tag = tag)
+pb_upload("data/ranger_ollama.duckdb", repo = "jbryer/chatR", tag = tag)
+```
