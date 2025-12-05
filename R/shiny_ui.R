@@ -3,6 +3,7 @@
 #' @return a [shiny::navbarPage()] object.
 #' @export
 #' @import shiny
+#' @import bslib
 #' @importFrom shinyjs useShinyjs
 chatR_ui <- function() {
 	navbarPage(
@@ -13,7 +14,6 @@ chatR_ui <- function() {
 			title = 'Chat',
 			shinyjs::useShinyjs(),
 			uiOutput('login_box'),
-			hr(),
 			uiOutput('chatbot')
 		),
 		tabPanel(

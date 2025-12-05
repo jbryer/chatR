@@ -46,7 +46,7 @@ class: center, middle, inverse, title-slide
 ---
 # Introduction
 
-My motivating question for this project is: **How are students using chatbots for learning?**
+My motivating question for this project is: **How are students using chatbots?**
 
 To answer this question I created a custom chatbot so...
 
@@ -218,7 +218,7 @@ Create the knowledge store (DuckDB database)
 
 ```{r, eval=FALSE}
 store <- ragnar_store_create(
-	'data/ranger_ollama.duckdb,
+	'data-raw/ragner_ollama.duckdb,
 	embed = \(x) ragnar::embed_ollama(x, model = 'llama3.1')
 )
 ```
@@ -234,15 +234,15 @@ for(i in 1:length(page_chunks)) {
 Finnaly, build an index for our knowledge store.
 
 ```{r, eval=FALSE}
-ragnar_store_build_index(store)
+ragnar::ragnar_store_build_index(store)
 ```
 
 ---
 # Connecting to a built knowledge store
 
 ```{r}
-store <- ragnar_store_connect(
-	store_location,
+store <- ragnar::ragnar_store_connect(
+	'../../data-raw/ragner_ollama.duckdb',
 	read_only = FALSE
 )
 ```
@@ -257,7 +257,7 @@ store <- ragnar_store_connect(
 We can retrieve content from the store.
 
 ```{r, eval=TRUE, cache=TRUE}
-ragnar_retrieve(store, 'bar plots in ggplot2')
+ragnar::ragnar_retrieve(store, 'bar plots in ggplot2')
 ```
 
 The `ragnar` package includes a Shiny application to explore the knowledge store interactively.
@@ -301,7 +301,7 @@ system_prompt <- "
 Using the `ragnar_register_tool_retrieve` we can connect our knowledge store with any `ellmer` chat object.
 
 ```{r, eval=TRUE, cache=TRUE}
-ragnar_register_tool_retrieve(chat, store)
+ragnar::ragnar_register_tool_retrieve(chat, store)
 ```
 
 ```{r, eval=TRUE}
@@ -321,6 +321,26 @@ class: center, inverse, middle, hide-logo, font140
 # DEMO
 
 ---
+# Demo Locally
+
+You can run the application locally.
+
+```{r, eval=FALSE}
+if(!dir.exists('data-raw/')) { dir.create('data-raw/', recursive = TRUE) }
+piggyback::pb_download(
+	file = "ragner_ollama.duckdb", 
+	dest = 'data-raw/',
+	repo = "jbryer/chatR",
+	tag = "v1.0.0")
+chatR::run_chatR(
+	store_location = 'data-raw/ragner_ollama.duckdb',
+	system_prompt = system_prompt
+)
+
+```
+
+
+---
 # Next Steps?
 
 Just finished my first semester using this custom chatbot. Over the break I will begin analyzing in more detail the questions students ask.
@@ -332,6 +352,7 @@ For the Spring semester I intend to solicit more explecit feedback from students
 I am also interested in how this may related to students responses to one-minute-papers they complete after each class. Students repsond to the following two questions:
 1. What was the most important thing you learned during this class?
 2. What important question remains unanswered for you?
+
 
 ---
 class: center, inverse, middle, hide-logo, font140

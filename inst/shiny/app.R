@@ -1,10 +1,10 @@
-library(shiny)
-library(login)
-library(shinyjs)
-library(ellmer)
-library(ragnar)
-library(shinychat)
-library(shinyBS)
+library(chatR)
+
+if(file.exists('../../R/shiny_server.R')) { # For local testing
+	message('Running Shiny functions locally...')
+	source('../../R/shiny_server.R')
+	source('../../R/shiny_ui.R')
+}
 
 chatR_config <- new.env()
 
@@ -15,11 +15,11 @@ if(file.exists('config.R')) {
 	stop('No configuration file found.')
 }
 
-ui <- chatR::chatR_ui
-server <- chatR::chatR_server
+ui <- chatR_ui
+server <- chatR_server
 
 environment(ui) <- chatR_config
 environment(server) <- chatR_config
 
 ##### Run the application ######################################################
-shinyApp(ui = ui, server = server)
+shiny::shinyApp(ui = ui, server = server)

@@ -5,7 +5,9 @@
 #' @param session Shiny session object.
 #' @export
 #' @import shiny shinychat ragnar ellmer
+#' @import bslib
 #' @importFrom shinyjs hide show
+#' @importFrom coro await_each async
 chatR_server <- function(input, output, session) {
 	required_login_params <- c('APP_ID', 'email_host', 'email_port', 'email_username',
 							   'email_password', 'from_email')
@@ -98,7 +100,10 @@ chatR_server <- function(input, output, session) {
 
 	output$chatbot <- renderUI({
 		if(USER$logged_in) {
-			shinychat::chat_ui("chat")
+			shinychat::chat_ui(
+				id = "chat",
+				placeholder = "Enter your question..."
+			)
 		}
 	})
 
@@ -148,14 +153,20 @@ chatR_server <- function(input, output, session) {
 			timestamp = timestamp,
 			answer = '')
 		stream <- chat$stream_async(input$chat_user_input, tool_mode = 'sequential')
-		coro::async(function() {
-			for (chunk in await_each(stream)) {
+		stream_res <- coro::async(function() {
+			for (chunk in coro::await_each(stream)) {
 				if(!is.null(question())) {
 					history[[question()]]$answer <- paste0(history[[question()]]$answer, chunk)
 				}
 				shinychat::chat_append_message('chat', list(role = 'assistant', content = chunk))
 			}
 		})()
+		stream_res$then(function(value) {
+			# print("Stream stopped.")
+			shinychat::chat_append('chat', list(role = 'assistant', content = "end"))
+			# shinychat::update_chat_user_input('chat', value = ' ', focus = TRUE)
+			# shinychat::chat_clear('chat')
+		})
 	})
 
 	observe({

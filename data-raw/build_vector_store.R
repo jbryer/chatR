@@ -4,7 +4,27 @@ library(rollama)
 
 # Need to install https://ollama.com
 
-store_location <- 'data/ranger_ollama.duckdb'
+# Set this vector to the list of URLs you want to include in the knowledge store.
+# All links within the same site will also be included so it is best to set this
+# to just the homepage.
+website_urls <- c(
+	'https://drive.google.com/uc?export=download&id=1--811-yIIvjT3dvnyFJM20rj_-tbB3bg',
+	'https://github.com/jbryer/DATA606Fall2020/blob/master/Textbook/os4.pdf?raw=true',
+	'https://www.cs.ucdavis.edu/~matloff/matloff/public_html/ProbStatBook.pdf',
+	'https://learningstatisticswithr.com/book/',
+	'https://r4ds.hadley.nz',
+	'https://adv-r.hadley.nz',
+	'https://r-pkgs.org',
+	'https://ggplot2-book.org',
+	'https://mastering-shiny.org',
+	'https://openintro-ims.netlify.app',
+	'https://moderndive.com',
+	'https://quarto.org',
+	'https://bookdown.org/yihui/rmarkdown/',
+	'https://cran.r-project.org/doc/manuals/r-release/R-intro.html'
+)
+
+store_location <- 'data/ragner_ollama.duckdb'
 chunks_location <- 'data-raw/page_chunks.rds'
 model <- 'llama3.1'
 
