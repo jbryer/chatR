@@ -60,7 +60,7 @@ piggyback::pb_download(
 	file = "ragner_ollama.duckdb", 
 	dest = 'data-raw/',
 	repo = "jbryer/chatR",
-	tag = "v1.0.0")
+	tag = "v1.0.2")
 ```
 
 We can run the application locally without needing to login.
@@ -88,7 +88,7 @@ Uploading the knowledge store (DuckDB file) to Github.
 
 ```{r, eval=FALSE}
 library(piggyback)
-tag <- 'v1.0.0'
+tag <- 'v1.0.2'
 pb_release_create(repo = "jbryer/chatR", tag = tag)
 pb_upload("data-raw/ragner_ollama.duckdb", repo = "jbryer/chatR", tag = tag)
 ```

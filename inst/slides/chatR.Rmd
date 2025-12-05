@@ -1,7 +1,7 @@
 ---
 title: "Creating a Custom AI Bot for Your Class"
 subtitle: "CUNY IT Conference"
-author: Jason Bryer, Ph.D.
+author: Jason Bryer, Ph.D.<br/>Assistant Professor, CUNY School of Professional Studies
 date: "December 5, 2025"
 output:
   xaringan::moon_reader:
@@ -250,15 +250,9 @@ store <- ragnar::ragnar_store_connect(
 ---
 # Inspecting the knowledge store
 
+.pull-left[
+
 **WARNING:** Creating the knowledge store will take a long time. I include 14 sources (3 PDFs, 11 websites) and it took over 12 hours on a M1 MacBook Pro to generate the knowledge store. You can download my knowledge store from the [Github repo](https://github.com/jbryer/chatR/releases).
-
---
-
-We can retrieve content from the store.
-
-```{r, eval=TRUE, cache=TRUE}
-ragnar::ragnar_retrieve(store, 'bar plots in ggplot2')
-```
 
 The `ragnar` package includes a Shiny application to explore the knowledge store interactively.
 
@@ -266,6 +260,26 @@ The `ragnar` package includes a Shiny application to explore the knowledge store
 ragnar::ragnar_store_inspect(store)
 ```
 
+]
+.pull-right[
+```{r, echo=FALSE}
+knitr::include_graphics('images/ragner_screenshot.png')
+```
+]
+
+---
+# Inspecting the knowledge store (cont.)
+
+We can retrieve content from the store.
+
+```{r, eval=TRUE, cache=TRUE}
+ragnar::ragnar_retrieve(store, 'bar plots in ggplot2')
+```
+
+
+All of this put together for you in a script. Just set the `website_urls` to the list of websites you want to index and run the script.
+
+https://github.com/jbryer/chatR/blob/master/data-raw/build_vector_store.R
 
 
 ---

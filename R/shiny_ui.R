@@ -9,7 +9,6 @@ chatR_ui <- function() {
 	navbarPage(
 		title = app_title,
 		id = 'tabs',
-
 		tabPanel(
 			title = 'Chat',
 			shinyjs::useShinyjs(),

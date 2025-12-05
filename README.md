@@ -66,17 +66,17 @@ resources (note this file is over 1gb in size).
 ``` r
 if(!dir.exists('data-raw/')) { dir.create('data-raw/', recursive = TRUE) }
 piggyback::pb_download(
-    file = "ranger_ollama.duckdb", 
+    file = "ragner_ollama.duckdb", 
     dest = 'data-raw/',
     repo = "jbryer/chatR",
-    tag = "v1.0.0")
+    tag = "v1.0.2")
 ```
 
 We can run the application locally without needing to login.
 
 ``` r
 chatR::run_chatR(
-    store_location = 'data-raw/ranger_ollama.duckdb'
+    store_location = 'data-raw/ragner_ollama.duckdb'
 )
 ```
 
@@ -91,11 +91,14 @@ devtools::check(cran = TRUE)
 pagedown::chrome_print('inst/slides/chatR.html', timeout = 120)
 ```
 
-Uploading the knowledge store (DuckDB file) to Github
+The [build_vector_store.R](data-raw/build_vector_store.R) script
+contains the code to build the knowledge store database.
+
+Uploading the knowledge store (DuckDB file) to Github.
 
 ``` r
 library(piggyback)
-tag <- 'v1.0.0'
+tag <- 'v1.0.2'
 pb_release_create(repo = "jbryer/chatR", tag = tag)
-pb_upload("data/ranger_ollama.duckdb", repo = "jbryer/chatR", tag = tag)
+pb_upload("data-raw/ragner_ollama.duckdb", repo = "jbryer/chatR", tag = tag)
 ```

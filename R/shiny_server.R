@@ -13,26 +13,34 @@ chatR_server <- function(input, output, session) {
 							   'email_password', 'from_email')
 
 	use_authentication <- reactiveVal()
+	params_avail <- sapply(required_login_params, exists)
 
-	if(all(sapply(required_login_params, exists))) {
+	if(all(params_avail)) {
 		USER <- login::login_server(
 			id = APP_ID,
-			db_conn = DBI::dbConnect(RSQLite::SQLite(), 'users.sqlite'),
+			db_conn = DBI::dbConnect(RSQLite::SQLite(), 'users.sqlite'), # TODO: Make parameter
 			emailer = emayili_emailer(
 				email_host = email_host,
 				email_port = email_port,
 				email_username = email_username,
 				email_password = email_password,
-				from_email = reset_password_from_email
+				from_email = from_email
 			),
 			additional_fields = c('first_name' = 'First Name',
 								  'last_name' = 'Last Name'),
 			new_account_subject = "Verify your new account",
 			reset_password_subject = "Reset password",
-			salt = 'login_demo'
+			cookie_name = NULL, # TODO: Figure out why this is broken
+			cookie_password = 'chatR',
+			# salt = 'login_demo'
+			# create_account_message = 'Create a new account',
+			# reset_email_message = 'Reset your password'
 		)
 		use_authentication(TRUE)
+		message('Authenication setup complete.')
 	} else {
+		warning(paste0('Not using authentication. Missing parameter(s): ',
+					   paste0(required_login_params[!params_avail], collapse = ', ')))
 		USER <- reactiveValues(
 			logged_in = TRUE,
 			username = unname(Sys.info()['user'])
