@@ -9,3 +9,4 @@ data/*.duckdb
 data-raw/*.duckdb
 private/
 inst/shiny/history/
+inst/shiny/users.sqlite

@@ -12,8 +12,7 @@ chatR_config <- new.env()
 
 if(file.exists('config.R')) {
 	source('config.R', chatR_config)
-	source('config.R')
-	# ls(chatR_config)
+	# source('config.R')
 } else {
 	stop('No configuration file found.')
 }

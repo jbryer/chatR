@@ -9,8 +9,10 @@
 #' @importFrom shinyjs hide show
 #' @importFrom coro await_each async
 chatR_server <- function(input, output, session) {
-	required_login_params <- c('APP_ID', 'email_host', 'email_port', 'email_username',
-							   'email_password', 'from_email')
+	##### Login Configuration ######################################################################
+	required_login_params <- c('APP_ID',
+							   'email_host', 'email_port',
+							   'email_username', 'email_password', 'from_email')
 
 	use_authentication <- reactiveVal()
 	params_avail <- sapply(required_login_params, exists)
@@ -30,7 +32,7 @@ chatR_server <- function(input, output, session) {
 								  'last_name' = 'Last Name'),
 			new_account_subject = "Verify your new account",
 			reset_password_subject = "Reset password",
-			cookie_name = NULL, # TODO: Figure out why this is broken
+			cookie_name = 'chatR', # TODO: Figure out why this is broken
 			cookie_password = 'chatR',
 			# salt = 'login_demo'
 			# create_account_message = 'Create a new account',
@@ -74,18 +76,6 @@ chatR_server <- function(input, output, session) {
 		}
 	})
 
-	store <- ragnar::ragnar_store_connect(
-		store_location,
-		read_only = TRUE
-	)
-
-	chat <- ellmer::chat_ollama(
-		model = model,
-		echo = 'all',
-		system_prompt = system_prompt,
-		base_url = base_url
-	)
-
 	observeEvent(USER$logged_in, {
 		if(USER$logged_in) {
 			shinyjs::hide(id = 'login_box')
@@ -106,6 +96,41 @@ chatR_server <- function(input, output, session) {
 		paste0(USER$first_name, ' ', USER$last_name)
 	})
 
+
+	##### Chatbot configuration ####################################################################
+	if(!exists('model')) {
+		model <- 'llama3.1' # NOTE: Default model
+		warning(paste0('model not specified. Using ', model))
+	}
+
+	if(exists('store_location')) {
+		store <- ragnar::ragnar_store_connect(
+			store_location,
+			read_only = TRUE
+		)
+	} else {
+		warning('store_location not specified.')
+	}
+
+	if(!exists('system_prompt')) {
+		system_prompt <- ''
+		warning('system_prompt not specified.')
+	}
+
+	if(!exists('base_url')) {
+		base_url <- Sys.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+		warning(paste0('base_url not specified. Using: ', base_url))
+	}
+
+	# TODO: May want to have a parameter to change chat service
+	chat <- ellmer::chat_ollama(
+		model = model,
+		echo = 'all',
+		system_prompt = system_prompt,
+		base_url = base_url
+	)
+
+	# Show chat box when logged in
 	output$chatbot <- renderUI({
 		if(USER$logged_in) {
 			shinychat::chat_ui(
@@ -115,6 +140,7 @@ chatR_server <- function(input, output, session) {
 		}
 	})
 
+	# Add/remove history tab on login/logout
 	observeEvent(USER$logged_in, {
 		if(USER$logged_in) {
 			insertTab(
@@ -122,7 +148,6 @@ chatR_server <- function(input, output, session) {
 				tabPanel(
 					title = 'History',
 					uiOutput('chat_history')
-					# htmlOutput('chat_history_text')
 				),
 				target = 'Chat'
 			)
@@ -131,9 +156,9 @@ chatR_server <- function(input, output, session) {
 		}
 	})
 
-	history_file <- reactiveVal()
-	question <- reactiveVal(NULL)
-	history <- reactiveValues()
+	history_file <- reactiveVal() # Path to the history file
+	question <- reactiveVal(NULL) # ID for the currently question
+	history <- reactiveValues()   # The user's chat history
 
 	if(!dir.exists(history_dir)) {
 		message(paste0('Creating history directory: ', history_dir))
@@ -159,6 +184,7 @@ chatR_server <- function(input, output, session) {
 			qid = qid,
 			question = input$chat_user_input,
 			timestamp = timestamp,
+			finished = NA,
 			answer = '')
 		stream <- chat$stream_async(input$chat_user_input, tool_mode = 'sequential')
 		stream_res <- coro::async(function() {
@@ -170,14 +196,12 @@ chatR_server <- function(input, output, session) {
 			}
 		})()
 		stream_res$then(function(value) {
-			# print("Stream stopped.")
 			shinychat::chat_append('chat', list(role = 'assistant', content = "end"))
-			# shinychat::update_chat_user_input('chat', value = ' ', focus = TRUE)
-			# shinychat::chat_clear('chat')
+			history[[question()]]$finished <- Sys.time()
 		})
 	})
 
-	observe({
+	observe({ # Save the history file
 		hist <- reactiveValuesToList(history)
 		saveRDS(hist, file = history_file())
 	})
