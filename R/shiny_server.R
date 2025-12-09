@@ -15,7 +15,7 @@ chatR_server <- function(input, output, session) {
 							   'email_username', 'email_password', 'from_email')
 
 	use_authentication <- reactiveVal()
-	params_avail <- sapply(required_login_params, exists)
+	params_avail <- sapply(required_login_params, exists, envir = environment())
 
 	if(all(params_avail)) {
 		USER <- login::login_server(
@@ -104,6 +104,7 @@ chatR_server <- function(input, output, session) {
 	}
 
 	if(exists('store_location')) {
+		message(paste0('Using knowledge store: ', store_location))
 		store <- ragnar::ragnar_store_connect(
 			store_location,
 			read_only = TRUE

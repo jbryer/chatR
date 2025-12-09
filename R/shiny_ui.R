@@ -11,6 +11,7 @@ chatR_ui <- function() {
 		id = 'tabs',
 		tabPanel(
 			title = 'Chat',
+			cookies::cookie_dependency(),
 			shinyjs::useShinyjs(),
 			uiOutput('login_box'),
 			uiOutput('chatbot')
