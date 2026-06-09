@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# chatR: Shiny Application for Retrival Augemented Generation Chatbot
+# chatR: Shiny Application for Retrival Augmented Generation Chatbot
 
 <!-- badges: start -->
 
